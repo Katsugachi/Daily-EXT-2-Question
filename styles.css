@@ -12,8 +12,7 @@ body {
   z-index: 10;
   height: 64px;
   padding: 0 24px;
-  background: rgba(255, 255, 255, .92);
-  backdrop-filter: blur(12px);
+  background: var(--gp-surface);
   border-bottom: 1px solid var(--gp-outline-quiet);
 }
 
@@ -23,7 +22,7 @@ body {
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--gp-primary-container);
   color: var(--gp-on-primary-container);
   font-weight: 500;
