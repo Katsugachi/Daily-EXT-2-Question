@@ -421,7 +421,7 @@ class LaunchRenderer:
         overlay = Image.new("RGBA", (OUT_W, OUT_H), (0, 0, 0, 0))
         draw = ImageDraw.Draw(overlay)
 
-        line_progress = ease(seconds / 0.75)
+        line_progress = 0.3 + 0.7 * ease(seconds / 0.75)
         line_width = int(112 * line_progress)
         draw.rounded_rectangle(
             ((OUT_W - 112) / 2, 315, (OUT_W - 112) / 2 + line_width, 325),
@@ -429,7 +429,7 @@ class LaunchRenderer:
             fill=BLUE
         )
 
-        title_alpha = ease((seconds - 0.38) / 0.85)
+        title_alpha = 0.55 + 0.45 * ease((seconds - 0.38) / 0.85)
         title_y = 365 + int((1 - title_alpha) * 28)
         paste_layer(overlay, self.opening_title, (0, title_y), title_alpha)
 
