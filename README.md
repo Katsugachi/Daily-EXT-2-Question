@@ -16,7 +16,8 @@ A static, GitHub Pages-deployable daily HSC Mathematics Extension 2 puzzle. The 
 2. In the GitHub repository, open **Settings → Secrets and variables → Actions**.
 3. Add the repository secret `AI_STUDIO_API_KEY`.
 4. Optionally add the repository variable `GEMINI_MODEL` if the exact Gemini 4 Hydrogen API model identifier differs from the default `gemini-4-hydrogen`.
-5. Run **Actions → Generate daily question → Run workflow** once to verify the setup.
+5. Open **Settings → Pages** and set **Build and deployment → Source** to **GitHub Actions**. The token used by the workflows cannot perform this one-time enablement step automatically.
+6. Run **Actions → Generate daily question → Run workflow** once to verify the setup.
 
 The generator prompt is date-aware and implements the progressive curriculum rules:
 
