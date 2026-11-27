@@ -8,9 +8,9 @@
 :root {
   color-scheme: light;
 
-  /* Font stacks. Google Sans is proprietary; use only if already licensed/bundled. */
-  --gp-font-family: "Google Sans Flex", "Google Sans", "Google Sans Text", Roboto, Arial, sans-serif;
-  --gp-font-family-text: "Google Sans Text", "Google Sans", Roboto, Arial, sans-serif;
+  /* Roboto is self-hosted so text renders consistently without relying on licensed system fonts. */
+  --gp-font-family: Roboto, Arial, sans-serif;
+  --gp-font-family-text: Roboto, Arial, sans-serif;
   --gp-font-family-plain: Roboto, Arial, sans-serif;
   --gp-font-family-mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 

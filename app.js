@@ -186,7 +186,8 @@
     renderArchive();
     updateStats();
     updateSolvedButton();
-    typesetMath().finally(() => {
+    const fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+    Promise.all([typesetMath(), fontsReady]).finally(() => {
       elements.appLoading.hidden = true;
     });
   }
