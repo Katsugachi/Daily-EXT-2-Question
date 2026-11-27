@@ -326,7 +326,10 @@ def assemble(raw_video: Path, scene_times: dict[str, list[float]]) -> Path:
             segments.append(make_gameplay_segment(raw_video, name, start, end))
 
     concat_file = BUILD_DIR / "concat.txt"
-    concat_file.write_text("".join(f"file '{segment}'\n" for segment in segments), encoding="utf-8")
+    concat_file.write_text(
+        "".join(f"file '{segment.relative_to(BUILD_DIR).as_posix()}'\n" for segment in segments),
+        encoding="utf-8"
+    )
     run([
         "ffmpeg", "-y",
         "-f", "concat",
