@@ -176,7 +176,7 @@
 
     elements.attemptInput.value = localStorage.getItem(attemptKey(question)) || "";
     elements.feedback.textContent = solvedRecordFor(question)
-      ? "Solved. You can still review the ladder or reset your local progress."
+      ? "Solved."
       : "";
     elements.loadingState.hidden = true;
     elements.errorState.hidden = true;
@@ -226,7 +226,7 @@
     const attempt = elements.attemptInput.value.trim();
     localStorage.setItem(attemptKey(state.question), attempt);
     elements.feedback.textContent = attempt
-      ? "Attempt saved. Use the ladder one rung at a time and compare each line before revealing more."
+      ? "Attempt saved."
       : "Blank attempt saved.";
   }
 
@@ -237,7 +237,7 @@
     state.solved = readJson(SOLVED_KEY, {});
     if (shouldUnmark) {
       delete state.solved[question.id];
-      elements.feedback.textContent = "Solved mark removed. Your attempt and hint progress are unchanged.";
+      elements.feedback.textContent = "Solved mark removed.";
     } else {
       state.solved[question.id] = {
         id: question.id,
@@ -247,7 +247,7 @@
         solvedAt: new Date().toISOString(),
         topic: question.topic || "Extension 2"
       };
-      elements.feedback.textContent = "Marked as solved. Its fingerprint is now cached in this browser.";
+      elements.feedback.textContent = "Marked as solved.";
     }
     writeJson(SOLVED_KEY, state.solved);
     renderArchive();
@@ -257,14 +257,14 @@
 
   function resetProgress() {
     if (!state.question) return;
-    if (!window.confirm("Reset this question? This permanently deletes the saved attempt, hint progress, and solved mark in this browser.")) return;
+    if (!window.confirm("Reset this question? This deletes your saved attempt, hint progress, and solved mark.")) return;
     localStorage.removeItem(progressKey(state.question));
     localStorage.removeItem(attemptKey(state.question));
     state.solved = readJson(SOLVED_KEY, {});
     delete state.solved[state.question.id];
     writeJson(SOLVED_KEY, state.solved);
     elements.attemptInput.value = "";
-    elements.feedback.textContent = "Local attempt, hint progress, and solved mark were reset.";
+    elements.feedback.textContent = "Attempt, hint progress, and solved mark were reset.";
     setProgress(state.question, 0);
     renderArchive();
     updateStats();

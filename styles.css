@@ -16,18 +16,6 @@ body {
   border-bottom: 1px solid var(--gp-outline-quiet);
 }
 
-.brand-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 12px;
-  background: var(--gp-primary-container);
-  color: var(--gp-on-primary-container);
-  font-weight: 500;
-}
-
 .brand-text {
   display: flex;
   flex-direction: column;
@@ -37,12 +25,6 @@ body {
 .brand-text strong {
   font-size: 16px;
   font-weight: 500;
-}
-
-.brand-text span {
-  color: var(--gp-text-secondary);
-  font-size: 12px;
-  margin-top: 3px;
 }
 
 .topbar-date {
@@ -59,23 +41,6 @@ body {
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: 24px;
   align-items: start;
-}
-
-.hero {
-  grid-column: 1 / -1;
-  max-width: 760px;
-  margin-bottom: 4px;
-}
-
-.hero h1 {
-  margin: 8px 0 10px;
-  letter-spacing: -.2px;
-}
-
-.hero p {
-  margin: 0;
-  color: var(--gp-text-secondary);
-  max-width: 680px;
 }
 
 .question-card,
@@ -338,13 +303,6 @@ mjx-container {
   font-weight: 500;
 }
 
-.note {
-  color: var(--gp-text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
-  margin: 0;
-}
-
 .loading,
 .error-state {
   padding: 28px;
@@ -353,13 +311,6 @@ mjx-container {
 
 .error-state strong {
   color: var(--gp-error);
-}
-
-.footer-note {
-  grid-column: 1 / -1;
-  color: var(--gp-text-tertiary);
-  font-size: 12px;
-  margin-top: 8px;
 }
 
 .sr-only {
@@ -389,7 +340,6 @@ mjx-container {
     padding: 0 16px;
   }
 
-  .brand-text span,
   .topbar-date {
     display: none;
   }

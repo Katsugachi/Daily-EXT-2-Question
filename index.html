@@ -16,29 +16,20 @@
 <body class="gp-body">
   <div class="app-loading" id="appLoading" role="status" aria-live="polite">
     <div class="app-loading__card">
-      <span class="brand-mark" aria-hidden="true">x²</span>
       <strong>Daily EXT 2</strong>
       <span>Loading today's question</span>
     </div>
   </div>
   <header class="gp-topbar app-topbar">
     <a class="gp-topbar__brand" href="./" aria-label="Daily EXT 2 Question home">
-      <span class="brand-mark" aria-hidden="true">x²</span>
       <span class="brand-text">
         <strong>Daily EXT 2</strong>
-        <span>HSC Mathematics Extension 2</span>
       </span>
     </a>
     <span class="topbar-date" id="todayLabel">Loading date</span>
   </header>
 
   <main class="game-shell">
-    <section class="hero" aria-labelledby="pageTitle">
-      <p class="gp-body-small gp-secondary">One rigorous problem each day</p>
-      <h1 id="pageTitle" class="gp-display-small">Daily EXT 2 Question</h1>
-      <p class="gp-body-large">Work first. Reveal only the next rung of the ladder when you need it: concept, first line, walkthrough, then formal solution.</p>
-    </section>
-
     <article class="question-card" aria-labelledby="questionHeading">
       <div id="loadingState" class="loading">Loading today's question</div>
 
@@ -108,7 +99,7 @@
 
       <div id="errorState" class="error-state" hidden>
         <strong>The question archive could not be loaded.</strong>
-        <p>Check your connection and try again. If the archive has not been published yet, run the generation workflow first.</p>
+        <p>Check your connection and try again later.</p>
         <button class="gp-btn gp-btn--tonal" id="retryButton" type="button">Retry</button>
       </div>
     </article>
@@ -124,17 +115,9 @@
 
       <section class="side-card" aria-labelledby="archiveHeading">
         <h2 id="archiveHeading" class="gp-title-medium">Archive</h2>
-        <p class="note">Previously solved question fingerprints are cached in this browser and generated questions are archived in the repository to avoid repeats.</p>
         <div class="archive-list" id="archiveList"></div>
       </section>
-
-      <section class="side-card" aria-labelledby="generatorHeading">
-        <h2 id="generatorHeading" class="gp-title-medium">Generation</h2>
-        <p class="note">New questions are committed daily by GitHub Actions using Gemini with web search, private reasoning, and JavaScript verification. Duplicate fingerprints are rejected before publication.</p>
-      </section>
     </aside>
-
-    <p class="footer-note">Difficulty follows the phased Extension 2 pathway, with Sunday Curveball concept unlocks.</p>
   </main>
 </body>
 </html>
