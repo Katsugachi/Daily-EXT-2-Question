@@ -1,0 +1,54 @@
+name: Generate daily question
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: Optional date in YYYY-MM-DD (Australia/Sydney)
+        required: false
+        type: string
+  schedule:
+    - cron: "15 13,14 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-ext2-generation
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Generate question
+        env:
+          AI_STUDIO_API_KEY: ${{ secrets.AI_STUDIO_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-4-hydrogen' }}
+          TARGET_DATE: ${{ inputs.target_date || '' }}
+        run: python3 scripts/generate_question.py
+
+      - name: Commit generated question
+        run: |
+          if git diff --quiet -- data/questions.json; then
+            echo "No archive change to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/questions.json
+          git commit -m "Add daily EXT 2 question"
+          git push

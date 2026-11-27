@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "questions": [
+    {
+      "id": "2026-11-27-algebraic-inequalities",
+      "date": "2026-11-27",
+      "weekday": "Friday",
+      "phase": "Phase 1",
+      "topic": "Algebraic inequalities",
+      "target": "Q12 Style",
+      "mode": "Standard",
+      "fingerprint": "0b468e49a3241947e30445552f4541e18b5bbf5772d54ba6ea83e111c44dd1b0",
+      "statement": "Prove that for all real numbers \\(a\\), \\(b\\) and \\(c\\), \\[(a+b+c)^2 \\le 3(a^2+b^2+c^2).\\]",
+      "hint1": "Move everything to one side and look for a sum of squares. A squared real number can never be negative.",
+      "hint2": "Start by writing \\(3(a^2+b^2+c^2)-(a+b+c)^2\\) in terms of \\((a-b)^2\\), \\((b-c)^2\\) and \\((c-a)^2\\).",
+      "walkthrough": [
+        "Expand \\((a+b+c)^2\\) as \\(a^2+b^2+c^2+2ab+2bc+2ca\\).",
+        "Subtract it from \\(3(a^2+b^2+c^2)\\). The result is \\(2a^2+2b^2+2c^2-2ab-2bc-2ca\\).",
+        "Group the expression as \\((a-b)^2+(b-c)^2+(c-a)^2\\).",
+        "Each squared term is non-negative, so their sum is non-negative. Therefore the original inequality is true.",
+        "Equality occurs exactly when \\(a=b=c\\)."
+      ],
+      "formalSolution": [
+        "Consider \\[3(a^2+b^2+c^2)-(a+b+c)^2.\\]",
+        "Expanding and rearranging gives \\[3(a^2+b^2+c^2)-(a^2+b^2+c^2+2ab+2bc+2ca)=2a^2+2b^2+2c^2-2ab-2bc-2ca.\\]",
+        "The right-hand expression factors as a sum of squares: \\[(a-b)^2+(b-c)^2+(c-a)^2.\\]",
+        "Because \\(a,b,c\\in\\mathbb R\\), each square is non-negative, so \\[(a-b)^2+(b-c)^2+(c-a)^2\\ge0.\\]",
+        "Hence \\(3(a^2+b^2+c^2)-(a+b+c)^2\\ge0\\), which rearranges to the required inequality. Equality holds exactly when \\(a=b=c\\)."
+      ],
+      "knowledgeGap": "The key idea is that \\(x^2\\ge0\\) for every real number \\(x\\). Several HSC proof questions are unlocked by rearranging an expression into squares. This avoids needing calculus and turns a comparison into a statement about non-negative quantities.",
+      "finalAnswer": "The inequality is true for all real \\(a,b,c\\), with equality exactly when \\(a=b=c\\).",
+      "verification": {
+        "javascript": "for (const a of [-2,-1,0,1,2]) for (const b of [-2,-1,0,1,2]) for (const c of [-2,-1,0,1,2]) { if ((a+b+c)**2 > 3*(a*a+b*b+c*c)) throw new Error('counterexample'); } 'ok'",
+        "status": "passed"
+      },
+      "source": "seed"
+    }
+  ]
+}

@@ -1,0 +1,243 @@
+/*
+ * Google Product UI tokens
+ * Framework-agnostic design variables distilled from public Google product
+ * surfaces and Material Design 3 guidance. This file contains no Google
+ * proprietary assets.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Font stacks. Google Sans is proprietary; use only if already licensed/bundled. */
+  --gp-font-family: "Google Sans Flex", "Google Sans", "Google Sans Text", Roboto, Arial, sans-serif;
+  --gp-font-family-text: "Google Sans Text", "Google Sans", Roboto, Arial, sans-serif;
+  --gp-font-family-plain: Roboto, Arial, sans-serif;
+  --gp-font-family-mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Primary/action color. */
+  --gp-primary: #0b57d0;
+  --gp-primary-legacy: #1a73e8;
+  --gp-on-primary: #ffffff;
+  --gp-primary-container: #c2e7ff;
+  --gp-primary-container-strong: #9dd2ff;
+  --gp-primary-container-soft: #c7dbff;
+  --gp-primary-container-legacy: #d3e3fd;
+  --gp-on-primary-container: #001d35;
+  --gp-on-primary-container-alt: #004a77;
+  --gp-primary-hover-legacy: #1967d2;
+  --gp-primary-pressed-legacy: #185abc;
+
+  /* Neutrals observed across Google product surfaces. */
+  --gp-text: #1f1f1f;
+  --gp-text-alt: #202124;
+  --gp-text-search: #16171a;
+  --gp-text-secondary: #444746;
+  --gp-text-tertiary: #5f6368;
+  --gp-text-muted-legacy: #616161;
+  --gp-text-disabled: rgba(31, 31, 31, .38);
+
+  --gp-surface: #ffffff;
+  --gp-surface-container: #f8fafd;
+  --gp-surface-low: #f8f9fa;
+  --gp-surface-settings: #f0f4f9;
+  --gp-surface-gemini: #faf9f9;
+  --gp-surface-neutral: #f2f0f0;
+  --gp-surface-neutral-hover: #e9e7e7;
+  --gp-surface-blue: #ebf1ff;
+  --gp-surface-blue-soft: #f5f8ff;
+  --gp-surface-selection-legacy: #e8f0fe;
+  --gp-surface-container-high: #e9eef6;
+  --gp-surface-disabled: rgba(31, 31, 31, .12);
+
+  --gp-outline: #747775;
+  --gp-outline-variant: #c4c7c5;
+  --gp-outline-legacy: #dadce0;
+  --gp-outline-quiet: #dde3ea;
+  --gp-outline-inverse: #303030;
+
+  /* Error/destructive. */
+  --gp-error: #b3261e;
+  --gp-on-error: #ffffff;
+  --gp-error-container: #f9dedc;
+  --gp-on-error-container: #410e0b;
+
+  /* Inverse/feedback. */
+  --gp-inverse-surface: #303030;
+  --gp-inverse-on-surface: #f2f2f2;
+  --gp-scrim: rgba(0, 0, 0, .32);
+
+  /* State-layer opacities. Apply the foreground/content color at these alphas. */
+  --gp-state-hover: .08;
+  --gp-state-focus: .10;
+  --gp-state-pressed: .12;
+  --gp-state-dragged: .16;
+  --gp-state-disabled-content: .38;
+  --gp-state-disabled-container: .12;
+
+  /* Type scale. */
+  --gp-display-small-size: 36px;
+  --gp-display-small-line: 44px;
+  --gp-display-small-weight: 400;
+
+  --gp-headline-small-size: 24px;
+  --gp-headline-small-line: 32px;
+  --gp-headline-small-weight: 400;
+
+  --gp-title-large-size: 22px;
+  --gp-title-large-line: 28px;
+  --gp-title-large-weight: 400;
+
+  --gp-title-medium-size: 16px;
+  --gp-title-medium-line: 24px;
+  --gp-title-medium-weight: 500;
+
+  --gp-title-small-size: 14px;
+  --gp-title-small-line: 20px;
+  --gp-title-small-weight: 500;
+
+  --gp-body-large-size: 16px;
+  --gp-body-large-line: 24px;
+  --gp-body-large-weight: 400;
+
+  --gp-body-medium-size: 14px;
+  --gp-body-medium-line: 20px;
+  --gp-body-medium-weight: 400;
+
+  --gp-body-small-size: 12px;
+  --gp-body-small-line: 16px;
+  --gp-body-small-weight: 400;
+
+  --gp-label-large-size: 14px;
+  --gp-label-large-line: 20px;
+  --gp-label-large-weight: 500;
+
+  --gp-label-medium-size: 12px;
+  --gp-label-medium-line: 16px;
+  --gp-label-medium-weight: 500;
+
+  --gp-label-small-size: 11px;
+  --gp-label-small-line: 16px;
+  --gp-label-small-weight: 500;
+
+  /* Shape scale. */
+  --gp-radius-none: 0;
+  --gp-radius-xs: 4px;
+  --gp-radius-sm: 8px;
+  --gp-radius-md: 12px;
+  --gp-radius-lg: 16px;
+  --gp-radius-lg-increased: 20px;
+  --gp-radius-xl: 28px;
+  --gp-radius-xl-increased: 32px;
+  --gp-radius-xxl: 48px;
+  --gp-radius-full: 999px;
+
+  /* Spacing: 4px base, generally multiples of 8 outside compact components. */
+  --gp-space-1: 4px;
+  --gp-space-2: 8px;
+  --gp-space-3: 12px;
+  --gp-space-4: 16px;
+  --gp-space-5: 20px;
+  --gp-space-6: 24px;
+  --gp-space-8: 32px;
+  --gp-space-10: 40px;
+  --gp-space-12: 48px;
+  --gp-space-16: 64px;
+  --gp-space-20: 80px;
+  --gp-space-24: 96px;
+
+  /* Component dimensions. */
+  --gp-topbar-height: 64px;
+  --gp-topbar-height-dense: 56px;
+  --gp-nav-width: 264px;
+  --gp-nav-width-ai: 280px;
+  --gp-nav-width-settings: 224px;
+  --gp-button-height: 40px;
+  --gp-button-height-dense: 36px;
+  --gp-icon-button-size: 40px;
+  --gp-icon-button-size-dense: 32px;
+  --gp-touch-target: 48px;
+  --gp-field-height: 56px;
+  --gp-search-height: 52px;
+  --gp-list-row-height: 48px;
+  --gp-nav-row-height: 40px;
+  --gp-nav-row-height-compact: 32px;
+  --gp-settings-row-height: 72px;
+  --gp-dialog-max-width: 560px;
+  --gp-content-measure: 760px;
+  --gp-settings-measure: 720px;
+
+  /* Elevation. Use sparingly; most Google product surfaces are flat. */
+  --gp-shadow-1: 0 1px 2px rgba(0, 0, 0, .30), 0 1px 3px 1px rgba(0, 0, 0, .15);
+  --gp-shadow-2: 0 1px 2px rgba(0, 0, 0, .30), 0 2px 6px 2px rgba(0, 0, 0, .15);
+  --gp-shadow-3: 0 1px 3px rgba(0, 0, 0, .30), 0 4px 8px 3px rgba(0, 0, 0, .15);
+  --gp-shadow-search: 0 3px 10px rgba(31, 31, 31, .08);
+  --gp-shadow-menu-legacy: 0 3px 4px rgba(0, 0, 0, .14), 0 3px 3px -2px rgba(0, 0, 0, .12), 0 1px 8px rgba(0, 0, 0, .20);
+
+  /* Motion. */
+  --gp-ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --gp-ease-decelerate: cubic-bezier(.05, .7, .1, 1);
+  --gp-ease-accelerate: cubic-bezier(.3, 0, .8, .15);
+  --gp-duration-short: 150ms;
+  --gp-duration-medium: 250ms;
+  --gp-duration-standard: 300ms;
+  --gp-duration-enter: 400ms;
+  --gp-duration-exit: 200ms;
+
+  /* Focus. */
+  --gp-focus-ring: 0 0 0 2px var(--gp-surface), 0 0 0 4px var(--gp-primary);
+}
+
+/* Optional dark theme. Apply data-theme="dark" to html or a product shell. */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --gp-primary: #a8c7fa;
+  --gp-on-primary: #062e6f;
+  --gp-primary-container: #0842a0;
+  --gp-primary-container-strong: #004a77;
+  --gp-primary-container-soft: #173e6d;
+  --gp-on-primary-container: #d3e3fd;
+  --gp-on-primary-container-alt: #d3e3fd;
+
+  --gp-text: #e3e3e3;
+  --gp-text-alt: #e3e3e3;
+  --gp-text-search: #e3e3e3;
+  --gp-text-secondary: #c4c7c5;
+  --gp-text-tertiary: #8e918f;
+  --gp-text-muted-legacy: #9aa0a6;
+  --gp-text-disabled: rgba(227, 227, 227, .38);
+
+  --gp-surface: #131314;
+  --gp-surface-container: #1e1f20;
+  --gp-surface-low: #1b1b1b;
+  --gp-surface-settings: #131314;
+  --gp-surface-gemini: #131314;
+  --gp-surface-neutral: #2a2a2a;
+  --gp-surface-neutral-hover: #333434;
+  --gp-surface-blue: #182235;
+  --gp-surface-blue-soft: #151d2d;
+  --gp-surface-selection-legacy: #173e6d;
+  --gp-surface-container-high: #282a2c;
+  --gp-surface-disabled: rgba(227, 227, 227, .12);
+
+  --gp-outline: #8e918f;
+  --gp-outline-variant: #444746;
+  --gp-outline-legacy: #5f6368;
+  --gp-outline-quiet: #3c4043;
+  --gp-outline-inverse: #e3e3e3;
+
+  --gp-error: #f2b8b5;
+  --gp-on-error: #601410;
+  --gp-error-container: #8c1d18;
+  --gp-on-error-container: #f9dedc;
+
+  --gp-inverse-surface: #e3e3e3;
+  --gp-inverse-on-surface: #303030;
+  --gp-scrim: rgba(0, 0, 0, .56);
+
+  /* Shadows are less visible in dark mode; rely more on surface steps/outlines. */
+  --gp-shadow-1: 0 1px 2px rgba(0, 0, 0, .55), 0 1px 3px 1px rgba(0, 0, 0, .30);
+  --gp-shadow-2: 0 1px 2px rgba(0, 0, 0, .55), 0 2px 6px 2px rgba(0, 0, 0, .30);
+  --gp-shadow-3: 0 1px 3px rgba(0, 0, 0, .55), 0 4px 8px 3px rgba(0, 0, 0, .30);
+  --gp-focus-ring: 0 0 0 2px var(--gp-surface), 0 0 0 4px var(--gp-primary);
+}

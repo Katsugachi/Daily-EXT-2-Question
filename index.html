@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A daily HSC Mathematics Extension 2 puzzle with a controlled hint ladder.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>Daily EXT 2 Question</title>
+  <link rel="stylesheet" href="google-product-tokens.css">
+  <link rel="stylesheet" href="google-product-components.css">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"], ["$", "$"]],
+        displayMath: [["\\[", "\\]"], ["$$", "$$"]]
+      },
+      svg: { fontCache: "global" },
+      options: { enableMenu: false }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body class="gp-body">
+  <header class="gp-topbar app-topbar">
+    <a class="gp-topbar__brand" href="./" aria-label="Daily EXT 2 Question home">
+      <span class="brand-mark" aria-hidden="true">x²</span>
+      <span class="brand-text">
+        <strong>Daily EXT 2</strong>
+        <span>HSC Mathematics Extension 2</span>
+      </span>
+    </a>
+    <span class="topbar-date" id="todayLabel">Loading date</span>
+  </header>
+
+  <main class="game-shell">
+    <section class="hero" aria-labelledby="pageTitle">
+      <p class="gp-body-small gp-secondary">One rigorous problem each day</p>
+      <h1 id="pageTitle" class="gp-display-small">Daily EXT 2 Question</h1>
+      <p class="gp-body-large">Work first. Reveal only the next rung of the ladder when you need it: concept, first line, walkthrough, then formal solution.</p>
+    </section>
+
+    <article class="question-card" aria-labelledby="questionHeading">
+      <div id="loadingState" class="loading">Loading today’s question…</div>
+
+      <div id="questionContent" hidden>
+        <div class="question-card__header">
+          <p class="gp-body-small gp-secondary" id="questionDate"></p>
+          <h2 id="questionHeading" class="gp-headline-small">Question</h2>
+          <div class="meta-row" aria-label="Question metadata">
+            <span class="meta-chip meta-chip--blue" id="topicChip"></span>
+            <span class="meta-chip" id="targetChip"></span>
+            <span class="meta-chip" id="modeChip"></span>
+          </div>
+        </div>
+
+        <div class="question-statement gp-body-large">
+          <p id="statementText"></p>
+        </div>
+
+        <section class="attempt-section" aria-labelledby="attemptHeading">
+          <label class="gp-title-small" for="attemptInput" id="attemptHeading">Your attempt</label>
+          <textarea class="attempt-input" id="attemptInput" placeholder="Write your reasoning here before opening the hints."></textarea>
+          <div class="attempt-actions">
+            <button class="gp-btn gp-btn--filled" id="saveAttemptButton" type="button">Save attempt</button>
+            <button class="gp-btn gp-btn--tonal" id="markSolvedButton" type="button">Mark as solved</button>
+            <button class="gp-btn gp-btn--text" id="resetProgressButton" type="button">Reset</button>
+          </div>
+          <p class="feedback gp-body-medium" id="feedback" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="hint-ladder" aria-labelledby="ladderHeading">
+          <h2 id="ladderHeading" class="gp-title-large">Hint ladder</h2>
+          <div class="ladder-steps" id="ladderSteps" aria-label="Hint progression">
+            <div class="ladder-step" data-step="1"><span>Step 1</span><strong>Hint 1</strong></div>
+            <div class="ladder-step" data-step="2"><span>Step 2</span><strong>Hint 2</strong></div>
+            <div class="ladder-step" data-step="3"><span>Step 3</span><strong>Walkthrough</strong></div>
+            <div class="ladder-step" data-step="4"><span>Step 4</span><strong>Formal solution</strong></div>
+          </div>
+          <div class="hint-actions">
+            <button class="gp-btn gp-btn--tonal-strong" id="nextHintButton" type="button">Reveal hint 1</button>
+          </div>
+
+          <section class="reveal-panel" id="hintOnePanel" aria-labelledby="hintOneTitle">
+            <h3 id="hintOneTitle" class="gp-title-medium">Hint 1 — the concept</h3>
+            <p id="hintOneText"></p>
+          </section>
+
+          <section class="reveal-panel" id="hintTwoPanel" aria-labelledby="hintTwoTitle">
+            <h3 id="hintTwoTitle" class="gp-title-medium">Hint 2 — the first line</h3>
+            <p id="hintTwoText"></p>
+          </section>
+
+          <section class="reveal-panel" id="walkthroughPanel" aria-labelledby="walkthroughTitle">
+            <h3 id="walkthroughTitle" class="gp-title-medium">Walkthrough</h3>
+            <ol id="walkthroughList"></ol>
+            <div id="knowledgeGapBlock" hidden>
+              <h4 class="gp-title-small">Knowledge gap unpack</h4>
+              <p id="knowledgeGapText"></p>
+            </div>
+          </section>
+
+          <section class="reveal-panel" id="formalPanel" aria-labelledby="formalTitle">
+            <h3 id="formalTitle" class="gp-title-medium">Formal solution</h3>
+            <ol id="formalList"></ol>
+          </section>
+        </section>
+      </div>
+
+      <div id="errorState" class="error-state" hidden>
+        <strong>No question archive found.</strong>
+        <p>Run the generation workflow or check that <code>data/questions.json</code> is deployed with the site.</p>
+      </div>
+    </article>
+
+    <aside class="sidebar" aria-label="Progress and archive">
+      <section class="side-card" aria-labelledby="progressHeading">
+        <h2 id="progressHeading" class="gp-title-medium">Your progress</h2>
+        <div class="stat-grid">
+          <div class="stat"><strong id="solvedCount">0</strong><span>solved</span></div>
+          <div class="stat"><strong id="streakCount">0</strong><span>day streak</span></div>
+        </div>
+      </section>
+
+      <section class="side-card" aria-labelledby="archiveHeading">
+        <h2 id="archiveHeading" class="gp-title-medium">Archive</h2>
+        <p class="note">Previously solved question fingerprints are cached in this browser and generated questions are archived in the repository to avoid repeats.</p>
+        <div class="archive-list" id="archiveList"></div>
+      </section>
+
+      <section class="side-card" aria-labelledby="generatorHeading">
+        <h2 id="generatorHeading" class="gp-title-medium">Generation</h2>
+        <p class="note">New questions are committed daily by GitHub Actions using Gemini with web search, private reasoning, and JavaScript verification. Duplicate fingerprints are rejected before publication.</p>
+      </section>
+    </aside>
+
+    <p class="footer-note">Difficulty follows the phased Extension 2 pathway, with Sunday Curveball concept unlocks.</p>
+  </main>
+</body>
+</html>
