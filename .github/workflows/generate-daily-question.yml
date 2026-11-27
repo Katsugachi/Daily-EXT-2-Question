@@ -1,0 +1,91 @@
+name: Generate daily question
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: Optional date in YYYY-MM-DD (Australia/Sydney)
+        required: false
+        type: string
+  schedule:
+    - cron: "15 14 * * *"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: daily-ext2-generation
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pull JavaScript sandbox image
+        run: docker pull node:22-alpine
+
+      - name: Generate question
+        env:
+          AI_STUDIO_API_KEY: ${{ secrets.AI_STUDIO_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-4-hydrogen' }}
+          TARGET_DATE: ${{ inputs.target_date || '' }}
+        run: python3 scripts/generate_question.py
+
+      - name: Commit generated question
+        id: commit
+        run: |
+          if git diff --quiet -- data/questions.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No archive change to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/questions.json
+          git commit -m "Add daily EXT 2 question"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push generated question
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" "HEAD:${{ github.ref_name }}"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .
+
+  deploy:
+    needs: generate
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
