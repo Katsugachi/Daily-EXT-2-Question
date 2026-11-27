@@ -419,3 +419,32 @@ mjx-container {
     transition: border-color var(--gp-duration-short) var(--gp-ease-standard), background var(--gp-duration-short) var(--gp-ease-standard);
   }
 }
+
+.app-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--gp-surface);
+}
+
+.app-loading[hidden] {
+  display: none;
+}
+
+.app-loading__card {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  border: 1px solid var(--gp-outline-quiet);
+  border-radius: 24px;
+  background: var(--gp-surface-low);
+  padding: 28px 32px;
+  color: var(--gp-text-secondary);
+}
+
+.app-loading__card strong {
+  color: var(--gp-text);
+  font-size: 20px;
+}

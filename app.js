@@ -36,7 +36,9 @@
     formalList: document.getElementById("formalList"),
     solvedCount: document.getElementById("solvedCount"),
     streakCount: document.getElementById("streakCount"),
-    archiveList: document.getElementById("archiveList")
+    archiveList: document.getElementById("archiveList"),
+    appLoading: document.getElementById("appLoading"),
+    retryButton: document.getElementById("retryButton")
   };
 
   const state = {
@@ -146,8 +148,8 @@
   }
 
   function renderMetadata(question) {
-    const prefix = question.mode === "Sunday Curveball" ? "DAILY EXT 2 — SUNDAY CURVEBALL" : "DAILY EXT 2";
-    elements.questionDate.textContent = `${prefix} — ${sydneyLongDate(question.date)}`;
+    const prefix = question.mode === "Sunday Curveball" ? "DAILY EXT 2 - SUNDAY CURVEBALL" : "DAILY EXT 2";
+    elements.questionDate.textContent = `${prefix} - ${sydneyLongDate(question.date)}`;
     elements.topicChip.textContent = question.topic || "Extension 2";
     elements.targetChip.textContent = question.target || "HSC style";
     elements.modeChip.textContent = question.mode || "Standard";
@@ -183,7 +185,10 @@
     renderProgress();
     renderArchive();
     updateStats();
-    typesetMath();
+    updateSolvedButton();
+    typesetMath().finally(() => {
+      elements.appLoading.hidden = true;
+    });
   }
 
   function renderProgress() {
@@ -205,8 +210,15 @@
 
   function typesetMath() {
     if (window.MathJax && typeof window.MathJax.typesetPromise === "function") {
-      window.MathJax.typesetPromise().catch(() => {});
+      return window.MathJax.typesetPromise().catch(() => {});
     }
+    return Promise.resolve();
+  }
+
+  function updateSolvedButton() {
+    elements.markSolvedButton.textContent = state.question && solvedRecordFor(state.question)
+      ? "Unmark solved"
+      : "Mark as solved";
   }
 
   function saveAttempt() {
@@ -222,21 +234,29 @@
     if (!state.question) return;
     const question = state.question;
     state.solved = readJson(SOLVED_KEY, {});
-    state.solved[question.id] = {
-      id: question.id,
-      fingerprint: question.fingerprint,
-      date: question.date,
-      solvedAt: new Date().toISOString(),
-      topic: question.topic || "Extension 2"
-    };
+    if (state.solved[question.id]) {
+      delete state.solved[question.id];
+      elements.feedback.textContent = "Solved mark removed. Your attempt and hint progress are unchanged.";
+    } else {
+      state.solved[question.id] = {
+        id: question.id,
+        fingerprint: question.fingerprint,
+        date: question.date,
+        solveDate: sydneyDateKey(),
+        solvedAt: new Date().toISOString(),
+        topic: question.topic || "Extension 2"
+      };
+      elements.feedback.textContent = "Marked as solved. Its fingerprint is now cached in this browser.";
+    }
     writeJson(SOLVED_KEY, state.solved);
-    elements.feedback.textContent = "Marked as solved. Its fingerprint is now cached in this browser.";
     renderArchive();
     updateStats();
+    updateSolvedButton();
   }
 
   function resetProgress() {
     if (!state.question) return;
+    if (!window.confirm("Reset this question? This permanently deletes the saved attempt, hint progress, and solved mark in this browser.")) return;
     localStorage.removeItem(progressKey(state.question));
     localStorage.removeItem(attemptKey(state.question));
     state.solved = readJson(SOLVED_KEY, {});
@@ -247,6 +267,7 @@
     setProgress(state.question, 0);
     renderArchive();
     updateStats();
+    updateSolvedButton();
   }
 
   function updateStats() {
@@ -256,7 +277,7 @@
   }
 
   function calculateStreak(records) {
-    const dates = new Set(records.map((record) => record.date).filter(Boolean));
+    const dates = new Set(records.map((record) => record.solveDate || record.date).filter(Boolean));
     let cursor = sydneyDateKey();
     if (!dates.has(cursor)) {
       cursor = shiftDateKey(cursor, -1);
@@ -302,7 +323,7 @@
     const todayKey = sydneyDateKey();
     elements.todayLabel.textContent = sydneyLongDate(todayKey);
     try {
-      const response = await fetch(ARCHIVE_URL, { cache: "no-store" });
+      const response = await fetch(ARCHIVE_URL);
       if (!response.ok) throw new Error(`Archive returned ${response.status}`);
       const payload = await response.json();
       state.archive = normaliseQuestions(payload);
@@ -312,6 +333,7 @@
       elements.loadingState.hidden = true;
       elements.questionContent.hidden = true;
       elements.errorState.hidden = false;
+      elements.appLoading.hidden = true;
       console.error(error);
     }
   }
@@ -319,6 +341,7 @@
   elements.saveAttemptButton.addEventListener("click", saveAttempt);
   elements.markSolvedButton.addEventListener("click", markSolved);
   elements.resetProgressButton.addEventListener("click", resetProgress);
+  elements.retryButton.addEventListener("click", () => window.location.reload());
   elements.nextHintButton.addEventListener("click", () => {
     if (!state.question || state.progress >= 4) return;
     setProgress(state.question, state.progress + 1);
@@ -327,6 +350,10 @@
     if (!state.question) return;
     localStorage.setItem(attemptKey(state.question), elements.attemptInput.value);
   });
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
 
   loadArchive();
 })();

@@ -193,7 +193,7 @@ def archive_summary(questions: list[dict[str, Any]]) -> str:
     for question in sorted(questions, key=lambda item: item.get("date", ""), reverse=True)[:24]:
         statement = re.sub(r"\s+", " ", str(question.get("statement", ""))).strip()
         lines.append(
-            f"- {question.get('date', 'unknown date')}: {question.get('topic', 'unknown topic')} — {statement[:160]}"
+            f"- {question.get('date', 'unknown date')}: {question.get('topic', 'unknown topic')} - {statement[:160]}"
         )
     return "\n".join(lines)
 
@@ -437,6 +437,8 @@ def validate_candidate(candidate: dict[str, Any], require_knowledge_gap: bool) -
     joined = json.dumps(candidate, ensure_ascii=False)
     if EMOJI_RE.search(joined):
         errors.append("contains emoji")
+    if "\u2014" in joined:
+        errors.append("contains em dash")
     statement = candidate.get("statement")
     if isinstance(statement, str) and len(statement) < 30:
         errors.append("statement is too short")

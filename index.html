@@ -14,6 +14,13 @@
   <script defer src="app.js"></script>
 </head>
 <body class="gp-body">
+  <div class="app-loading" id="appLoading" role="status" aria-live="polite">
+    <div class="app-loading__card">
+      <span class="brand-mark" aria-hidden="true">x²</span>
+      <strong>Daily EXT 2</strong>
+      <span>Loading today's question</span>
+    </div>
+  </div>
   <header class="gp-topbar app-topbar">
     <a class="gp-topbar__brand" href="./" aria-label="Daily EXT 2 Question home">
       <span class="brand-mark" aria-hidden="true">x²</span>
@@ -33,7 +40,7 @@
     </section>
 
     <article class="question-card" aria-labelledby="questionHeading">
-      <div id="loadingState" class="loading">Loading today’s question…</div>
+      <div id="loadingState" class="loading">Loading today's question</div>
 
       <div id="questionContent" hidden>
         <div class="question-card__header">
@@ -74,12 +81,12 @@
           </div>
 
           <section class="reveal-panel" id="hintOnePanel" aria-labelledby="hintOneTitle">
-            <h3 id="hintOneTitle" class="gp-title-medium">Hint 1 — the concept</h3>
+            <h3 id="hintOneTitle" class="gp-title-medium">Hint 1 - the concept</h3>
             <p id="hintOneText"></p>
           </section>
 
           <section class="reveal-panel" id="hintTwoPanel" aria-labelledby="hintTwoTitle">
-            <h3 id="hintTwoTitle" class="gp-title-medium">Hint 2 — the first line</h3>
+            <h3 id="hintTwoTitle" class="gp-title-medium">Hint 2 - the first line</h3>
             <p id="hintTwoText"></p>
           </section>
 
@@ -100,8 +107,9 @@
       </div>
 
       <div id="errorState" class="error-state" hidden>
-        <strong>No question archive found.</strong>
-        <p>Run the generation workflow or check that <code>data/questions.json</code> is deployed with the site.</p>
+        <strong>The question archive could not be loaded.</strong>
+        <p>Check your connection and try again. If the archive has not been published yet, run the generation workflow first.</p>
+        <button class="gp-btn gp-btn--tonal" id="retryButton" type="button">Retry</button>
       </div>
     </article>
 
