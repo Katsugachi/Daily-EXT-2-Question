@@ -221,6 +221,7 @@
   function markSolved() {
     if (!state.question) return;
     const question = state.question;
+    state.solved = readJson(SOLVED_KEY, {});
     state.solved[question.id] = {
       id: question.id,
       fingerprint: question.fingerprint,
@@ -238,6 +239,7 @@
     if (!state.question) return;
     localStorage.removeItem(progressKey(state.question));
     localStorage.removeItem(attemptKey(state.question));
+    state.solved = readJson(SOLVED_KEY, {});
     delete state.solved[state.question.id];
     writeJson(SOLVED_KEY, state.solved);
     elements.attemptInput.value = "";
