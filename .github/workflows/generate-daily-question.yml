@@ -28,6 +28,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.ref_name }}
           persist-credentials: false
 
       - name: Set up Python
