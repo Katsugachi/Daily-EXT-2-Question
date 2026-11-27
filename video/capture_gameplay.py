@@ -184,7 +184,8 @@ def capture() -> dict:
 
             started = time.monotonic()
             start_scene("overview")
-            page.clock.set_fixed_time("2026-11-27T10:00:00")
+            # Use an explicit Sydney instant so the daily date is stable in every host timezone.
+            page.clock.set_fixed_time("2026-11-27T10:00:00+11:00")
             page.goto(f"http://127.0.0.1:{port}/", wait_until="domcontentloaded")
             page.evaluate(f"document.documentElement.style.zoom = '{ZOOM}'")
             page.evaluate(CURSOR_SCRIPT)
@@ -217,16 +218,32 @@ def capture() -> dict:
                     };
                 }"""
             )
+            date_report = page.evaluate(
+                """() => {
+                    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+                        timeZone: 'Australia/Sydney',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    }).formatToParts(new Date()).map((part) => [part.type, part.value]));
+                    return {
+                        todayKey: `${parts.year}-${parts.month}-${parts.day}`,
+                        todayLabel: document.getElementById('todayLabel').textContent,
+                        questionDate: document.getElementById('questionDate').textContent
+                    };
+                }"""
+            )
             verification = {
                 "assets": asset_checks,
                 "fonts": font_report,
+                "date": date_report,
                 "consoleErrors": console_errors,
                 "viewport": {"width": WIDTH, "height": HEIGHT},
                 "zoom": ZOOM,
             }
             bad_assets = [item for item in asset_checks if item["status"] != 200]
             missing_fonts = [key for key in ("roboto400", "roboto500", "roboto700") if not font_report.get(key)]
-            if bad_assets or missing_fonts or console_errors:
+            if bad_assets or missing_fonts or console_errors or date_report["todayKey"] != "2026-11-27":
                 raise RuntimeError(f"Capture preflight failed: {verification}")
 
             driver = CaptureDriver(page)
