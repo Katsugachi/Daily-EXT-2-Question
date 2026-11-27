@@ -25,7 +25,7 @@ The generator prompt is date-aware and implements the progressive curriculum rul
 - Phase 3 in 2029-2030: full Extension 2 synthesis and Q16-style problems.
 - Sundays use the Sunday Curveball mode and introduce one unfamiliar concept with a knowledge-gap explanation.
 
-The generator requests Gemini with web search, private reasoning/thinking, code execution, and a custom restricted `javascript_eval` tool. Candidate output must be valid JSON, pass local JavaScript verification, and have a fingerprint absent from the archive before it is committed.
+The generator uses the Gemini Interactions API with web search, high private reasoning/thinking, code execution, and a custom `javascript_eval` tool. Candidate output must be valid JSON, pass verification in a networkless read-only Docker JavaScript sandbox, and have a fingerprint absent from the archive before it is committed. Generated-question commits deploy Pages within the same workflow because token-pushed commits do not trigger the separate push-based Pages workflow.
 
 ## Local preview
 
