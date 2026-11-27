@@ -67,7 +67,7 @@ Return exactly one valid JSON object and no Markdown fences. Required keys:
 - "hint2": exact first line, substitution, or construction, then stop
 - "walkthrough": array of 4-8 student-facing steps
 - "formalSolution": array of 3-8 concise marking-guideline steps
-- "knowledgeGap": first-principles explanation of unfamiliar symbols or techniques; empty string only if truly unnecessary
+- "knowledgeGap": first-principles explanation of unfamiliar symbols or techniques; required and non-empty on Sundays, empty string allowed on other days when truly unnecessary
 - "finalAnswer": final result or proof conclusion
 - "verification": object with key "javascript", whose value is JavaScript code that numerically or algebraically checks representative cases and evaluates to the exact string "ok" when the check passes
 
@@ -129,7 +129,7 @@ QUESTION_SCHEMA = {
     ]
 }
 
-REQUIRED_STRING_FIELDS = ["topic", "target", "statement", "hint1", "hint2", "knowledgeGap", "finalAnswer"]
+REQUIRED_STRING_FIELDS = ["topic", "target", "statement", "hint1", "hint2", "finalAnswer"]
 REQUIRED_LIST_FIELDS = ["walkthrough", "formalSolution"]
 EMOJI_RE = re.compile("[\U0001F300-\U0001FAFF\U00002700-\U000027BF]")
 
@@ -417,11 +417,16 @@ def extract_json_object(text: str) -> dict[str, Any]:
     return json.loads(cleaned[start:end + 1])
 
 
-def validate_candidate(candidate: dict[str, Any]) -> list[str]:
+def validate_candidate(candidate: dict[str, Any], require_knowledge_gap: bool) -> list[str]:
     errors = []
     for field in REQUIRED_STRING_FIELDS:
         if not isinstance(candidate.get(field), str) or not candidate[field].strip():
             errors.append(f"missing or empty string field: {field}")
+    knowledge_gap = candidate.get("knowledgeGap")
+    if not isinstance(knowledge_gap, str):
+        errors.append("missing or invalid string field: knowledgeGap")
+    elif require_knowledge_gap and not knowledge_gap.strip():
+        errors.append("missing or empty string field: knowledgeGap")
     for field in REQUIRED_LIST_FIELDS:
         value = candidate.get(field)
         if not isinstance(value, list) or not value or not all(isinstance(item, str) and item.strip() for item in value):
@@ -480,7 +485,7 @@ def generate_question(date: datetime, questions: list[dict[str, Any]], api_key: 
             errors.append(f"attempt {attempt}: invalid JSON: {error}")
             continue
 
-        validation_errors = validate_candidate(candidate)
+        validation_errors = validate_candidate(candidate, require_knowledge_gap=mode == "Sunday Curveball")
         if validation_errors:
             errors.extend(f"attempt {attempt}: {item}" for item in validation_errors)
             continue
