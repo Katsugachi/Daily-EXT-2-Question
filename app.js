@@ -233,8 +233,9 @@
   function markSolved() {
     if (!state.question) return;
     const question = state.question;
+    const shouldUnmark = Boolean(solvedRecordFor(question));
     state.solved = readJson(SOLVED_KEY, {});
-    if (state.solved[question.id]) {
+    if (shouldUnmark) {
       delete state.solved[question.id];
       elements.feedback.textContent = "Solved mark removed. Your attempt and hint progress are unchanged.";
     } else {
@@ -349,6 +350,13 @@
   elements.attemptInput.addEventListener("input", () => {
     if (!state.question) return;
     localStorage.setItem(attemptKey(state.question), elements.attemptInput.value);
+  });
+  window.addEventListener("storage", (event) => {
+    if (event.key !== SOLVED_KEY) return;
+    state.solved = readJson(SOLVED_KEY, {});
+    renderArchive();
+    updateStats();
+    updateSolvedButton();
   });
 
   if ("serviceWorker" in navigator) {
