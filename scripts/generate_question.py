@@ -250,7 +250,7 @@ try {
         "--memory", "128m",
         "--cpus", "0.5",
         "--user", "65534:65534",
-        "-e", f"JS_SOURCE={source[:12000]}",
+        "-e", f"JS_SOURCE={source[:12000].replace(chr(0), '')}",
         JAVASCRIPT_IMAGE,
         "node", "-e", runner
     ]
@@ -263,7 +263,7 @@ try {
             env={"PATH": os.environ.get("PATH", "")},
             check=False
         )
-    except (OSError, subprocess.TimeoutExpired) as error:
+    except (OSError, subprocess.TimeoutExpired, ValueError) as error:
         return sandbox_json({"ok": False, "error": f"JavaScript sandbox unavailable or timed out: {error}"})
 
     stdout = completed.stdout.strip()
