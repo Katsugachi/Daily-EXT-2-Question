@@ -9,7 +9,7 @@
       "topic": "Algebraic inequalities",
       "target": "Q12 Style",
       "mode": "Standard",
-      "fingerprint": "0b468e49a3241947e30445552f4541e18b5bbf5772d54ba6ea83e111c44dd1b0",
+      "fingerprint": "9c1b599519f9d631e80b9dd2d91f73ba0d7b2fb5782a43bd8b9e76ba21f5819f",
       "statement": "Prove that for all real numbers \\(a\\), \\(b\\) and \\(c\\), \\[(a+b+c)^2 \\le 3(a^2+b^2+c^2).\\]",
       "hint1": "Move everything to one side and look for a sum of squares. A squared real number can never be negative.",
       "hint2": "Start by writing \\(3(a^2+b^2+c^2)-(a+b+c)^2\\) in terms of \\((a-b)^2\\), \\((b-c)^2\\) and \\((c-a)^2\\).",
