@@ -417,9 +417,9 @@ class LaunchRenderer:
         local_time = seconds - scene["output_start"]
         return self.render_scene_only(scene_index, local_time, morph=scene_index > 0 and local_time < TRANSITION)
 
-    def render_opening(self, seconds: float) -> Image.Image:
-        base = BACKGROUND.copy()
-        draw = ImageDraw.Draw(base)
+    def opening_overlay(self, seconds: float) -> Image.Image:
+        overlay = Image.new("RGBA", (OUT_W, OUT_H), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(overlay)
 
         line_progress = ease(seconds / 0.75)
         line_width = int(112 * line_progress)
@@ -431,24 +431,34 @@ class LaunchRenderer:
 
         title_alpha = ease((seconds - 0.38) / 0.85)
         title_y = 365 + int((1 - title_alpha) * 28)
-        paste_layer(base, self.opening_title, (0, title_y), title_alpha)
+        paste_layer(overlay, self.opening_title, (0, title_y), title_alpha)
 
         strip_alpha = ease((seconds - 1.55) / 0.8)
         strip_y = 780 + int((1 - strip_alpha) * 20)
-        paste_layer(base, PROGRESSION, ((OUT_W - PROGRESSION.width) // 2, strip_y), strip_alpha)
+        paste_layer(overlay, PROGRESSION, ((OUT_W - PROGRESSION.width) // 2, strip_y), strip_alpha)
+        return overlay
+
+    def render_opening(self, seconds: float) -> Image.Image:
+        base = BACKGROUND.copy()
+        base.alpha_composite(self.opening_overlay(seconds))
         return base
 
-    def render_end(self, seconds: float) -> Image.Image:
-        base = BACKGROUND.copy()
-        draw = ImageDraw.Draw(base)
-        alpha = ease(seconds / 0.7)
+    def end_overlay(self, seconds: float) -> Image.Image:
+        overlay = Image.new("RGBA", (OUT_W, OUT_H), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(overlay)
+        alpha = ease((seconds - 0.14) / 0.7)
         line_width = int(112 * alpha)
         draw.rounded_rectangle(
             ((OUT_W - 112) / 2, 352, (OUT_W - 112) / 2 + line_width, 362),
             radius=5,
             fill=BLUE
         )
-        paste_layer(base, self.end_title, (0, 392 + int((1 - alpha) * 20)), alpha)
+        paste_layer(overlay, self.end_title, (0, 392 + int((1 - alpha) * 20)), alpha)
+        return overlay
+
+    def render_end(self, seconds: float) -> Image.Image:
+        base = BACKGROUND.copy()
+        base.alpha_composite(self.end_overlay(seconds))
         return base
 
     def render(self, seconds: float) -> Image.Image:
@@ -458,24 +468,23 @@ class LaunchRenderer:
         if seconds < self.end_start:
             image = self.render_gameplay(seconds)
             opening_elapsed = seconds - OPENING_DURATION
-            if opening_elapsed < 0.24:
-                opening = self.render_opening(OPENING_DURATION)
-                return Image.blend(opening, BACKGROUND, ease(opening_elapsed / 0.24))
-            if opening_elapsed < 0.58:
-                alpha = ease((opening_elapsed - 0.24) / 0.34)
-                return Image.blend(BACKGROUND, image, alpha)
+            if opening_elapsed < 0.48:
+                alpha = ease((opening_elapsed - 0.1) / 0.38)
+                base = Image.blend(BACKGROUND, image, alpha)
+                exit_progress = ease(opening_elapsed / 0.22)
+                opening = self.opening_overlay(OPENING_DURATION)
+                paste_layer(base, opening, (0, -int(exit_progress * 110)), (1.0 - exit_progress) ** 2)
+                return base
             return image
 
         end_seconds = seconds - self.end_start
-        end_image = self.render_end(end_seconds)
-        if end_seconds < 0.24:
+        if end_seconds < 0.38:
             last_scene = self.scenes[-1]
-            last_image = self.render_scene_only(len(self.scenes) - 1, last_scene["duration"] - 0.02)
-            return Image.blend(last_image, BACKGROUND, ease(end_seconds / 0.24))
-        if end_seconds < 0.58:
-            alpha = ease((end_seconds - 0.24) / 0.34)
-            return Image.blend(BACKGROUND, end_image, alpha)
-        return end_image
+            last_image = self.render_scene_only(len(self.scenes) - 1, last_scene["duration"])
+            base = Image.blend(last_image, BACKGROUND, ease(end_seconds / 0.34))
+            base.alpha_composite(self.end_overlay(end_seconds))
+            return base
+        return self.render_end(end_seconds)
 
 
 def render_preview(renderer: LaunchRenderer, path: Path) -> None:
