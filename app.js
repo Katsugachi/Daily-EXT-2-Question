@@ -148,8 +148,8 @@
   }
 
   function renderMetadata(question) {
-    const prefix = question.mode === "Sunday Curveball" ? "DAILY EXT 2 - SUNDAY CURVEBALL" : "DAILY EXT 2";
-    elements.questionDate.textContent = `${prefix} - ${sydneyLongDate(question.date)}`;
+    const prefix = question.mode === "Sunday Curveball" ? "DAILY EXT 2: SUNDAY CURVEBALL" : "DAILY EXT 2";
+    elements.questionDate.textContent = `${prefix}: ${sydneyLongDate(question.date)}`;
     elements.topicChip.textContent = question.topic || "Extension 2";
     elements.targetChip.textContent = question.target || "HSC style";
     elements.modeChip.textContent = question.mode || "Standard";
@@ -263,7 +263,7 @@
     delete state.solved[state.question.id];
     writeJson(SOLVED_KEY, state.solved);
     elements.attemptInput.value = "";
-    elements.feedback.textContent = "Local attempt, hint progression, and solved mark reset.";
+    elements.feedback.textContent = "Local attempt, hint progress, and solved mark were reset.";
     setProgress(state.question, 0);
     renderArchive();
     updateStats();
