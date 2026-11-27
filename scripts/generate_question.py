@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Generate and cache a Daily EXT 2 question with the Gemini API.
+"""Generate and cache a Daily EXT 2 question with the Gemini Interactions API.
 
-The script is intentionally dependency-free so the GitHub Actions workflow stays
-small. It never prints the API key or model reasoning.
+The script is dependency-free so the GitHub Actions workflow stays small. It
+never prints the API key or model reasoning. Model-supplied JavaScript is run
+only inside a locked-down Docker container with no network or mounted files.
 """
 
 from __future__ import annotations
@@ -13,7 +14,6 @@ import os
 import re
 import subprocess
 import sys
-import tempfile
 import urllib.error
 import urllib.request
 from datetime import datetime
@@ -25,7 +25,9 @@ ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE_PATH = ROOT / "data" / "questions.json"
 TIME_ZONE = ZoneInfo("Australia/Sydney")
 DEFAULT_MODEL = "gemini-4-hydrogen"
-API_ROOT = "https://generativelanguage.googleapis.com/v1beta"
+API_URL = "https://generativelanguage.googleapis.com/v1beta/interactions"
+API_REVISION = "2026-05-20"
+JAVASCRIPT_IMAGE = os.environ.get("JAVASCRIPT_SANDBOX_IMAGE", "node:22-alpine")
 
 SYSTEM_PROMPT = """You are the question writer for Daily EXT 2 Question, a daily HSC Mathematics Extension 2 puzzle game.
 
@@ -67,7 +69,7 @@ Return exactly one valid JSON object and no Markdown fences. Required keys:
 - "formalSolution": array of 3-8 concise marking-guideline steps
 - "knowledgeGap": first-principles explanation of unfamiliar symbols or techniques; empty string only if truly unnecessary
 - "finalAnswer": final result or proof conclusion
-- "verification": object with key "javascript", whose value is JavaScript code that numerically or algebraically checks representative cases and returns the string "ok" when the check passes
+- "verification": object with key "javascript", whose value is JavaScript code that numerically or algebraically checks representative cases and evaluates to the exact string "ok" when the check passes
 
 Quality constraints:
 - The problem must be original, correct, interesting, and solvable with the phase toolkit plus the curveball concept on Sundays.
@@ -77,22 +79,55 @@ Quality constraints:
 - Before finalizing, use the JavaScript tool to sanity-check algebra or representative cases, then include a compact verification script in the JSON.
 """
 
-FUNCTION_DECLARATIONS = [
-    {
-        "name": "javascript_eval",
-        "description": "Evaluate a small JavaScript program in a restricted Node.js VM. Use it for representative numerical checks, algebra spot-checks, combinatorial enumeration, and sanity checks. The program cannot access files, network, process, or require.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "source": {
-                    "type": "STRING",
-                    "description": "JavaScript source to evaluate. Return a concise value."
-                }
-            },
-            "required": ["source"]
-        }
+JAVASCRIPT_TOOL = {
+    "type": "function",
+    "name": "javascript_eval",
+    "description": "Evaluate a small JavaScript program in an isolated Docker container with no network, files, process access, or require. Use it for representative numerical checks, algebra spot-checks, combinatorial enumeration, and sanity checks. Return a concise value.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "source": {
+                "type": "string",
+                "description": "JavaScript source to evaluate. The final completion value should be concise."
+            }
+        },
+        "required": ["source"]
     }
-]
+}
+
+QUESTION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "topic": {"type": "string"},
+        "target": {"type": "string"},
+        "statement": {"type": "string"},
+        "hint1": {"type": "string"},
+        "hint2": {"type": "string"},
+        "walkthrough": {"type": "array", "items": {"type": "string"}},
+        "formalSolution": {"type": "array", "items": {"type": "string"}},
+        "knowledgeGap": {"type": "string"},
+        "finalAnswer": {"type": "string"},
+        "verification": {
+            "type": "object",
+            "properties": {
+                "javascript": {"type": "string"}
+            },
+            "required": ["javascript"]
+        }
+    },
+    "required": [
+        "topic",
+        "target",
+        "statement",
+        "hint1",
+        "hint2",
+        "walkthrough",
+        "formalSolution",
+        "knowledgeGap",
+        "finalAnswer",
+        "verification"
+    ]
+}
 
 REQUIRED_STRING_FIELDS = ["topic", "target", "statement", "hint1", "hint2", "knowledgeGap", "finalAnswer"]
 REQUIRED_LIST_FIELDS = ["walkthrough", "formalSolution"]
@@ -116,15 +151,11 @@ def write_archive(payload: dict[str, Any]) -> None:
     ARCHIVE_PATH.write_text(text, encoding="utf-8")
 
 
-def sydney_today() -> datetime:
-    return datetime.now(TIME_ZONE)
-
-
 def parse_target_date() -> datetime:
     override = os.environ.get("TARGET_DATE", "").strip()
     if override:
         return datetime.strptime(override, "%Y-%m-%d").replace(tzinfo=TIME_ZONE)
-    return sydney_today()
+    return datetime.now(TIME_ZONE)
 
 
 def phase_for_date(date: datetime) -> tuple[str, str]:
@@ -167,26 +198,30 @@ def archive_summary(questions: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def gemini_endpoint(model: str, api_key: str) -> str:
-    return f"{API_ROOT}/models/{model}:generateContent?key={api_key}"
-
-
-def post_json(url: str, payload: dict[str, Any]) -> dict[str, Any]:
+def post_interaction(payload: dict[str, Any], api_key: str) -> dict[str, Any]:
     body = json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(
-        url,
+        API_URL,
         data=body,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "x-goog-api-key": api_key,
+            "Api-Revision": os.environ.get("GEMINI_API_REVISION", API_REVISION)
+        },
         method="POST"
     )
     try:
-        with urllib.request.urlopen(request, timeout=120) as response:
+        with urllib.request.urlopen(request, timeout=180) as response:
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as error:
         detail = error.read().decode("utf-8", errors="replace")[:1200]
         raise GeminiError(f"Gemini API HTTP {error.code}: {detail}", error.code) from error
     except urllib.error.URLError as error:
         raise GeminiError(f"Gemini API request failed: {error}") from error
+
+
+def sandbox_json(payload: dict[str, Any]) -> str:
+    return json.dumps(payload, separators=(",", ":"))[:3000]
 
 
 def run_javascript(source: str) -> str:
@@ -205,114 +240,169 @@ try {
   process.stdout.write(JSON.stringify({ ok: false, error: String(error && error.message || error), logs: logs.slice(0, 12) }));
 }
 """
-    env = {
-        "JS_SOURCE": source[:12000],
-        "PATH": os.environ.get("PATH", "")
-    }
+    command = [
+        "docker", "run", "--rm",
+        "--network", "none",
+        "--read-only",
+        "--cap-drop", "ALL",
+        "--security-opt", "no-new-privileges",
+        "--pids-limit", "64",
+        "--memory", "128m",
+        "--cpus", "0.5",
+        "--user", "65534:65534",
+        "-e", f"JS_SOURCE={source[:12000]}",
+        JAVASCRIPT_IMAGE,
+        "node", "-e", runner
+    ]
     try:
         completed = subprocess.run(
-            ["node", "-e", runner],
+            command,
             text=True,
             capture_output=True,
-            timeout=4,
-            env=env,
+            timeout=20,
+            env={"PATH": os.environ.get("PATH", "")},
             check=False
         )
     except (OSError, subprocess.TimeoutExpired) as error:
-        return f"JavaScript execution unavailable or timed out: {error}"
-    output = (completed.stdout or completed.stderr).strip()
-    return output[:3000] or "JavaScript execution produced no output"
+        return sandbox_json({"ok": False, "error": f"JavaScript sandbox unavailable or timed out: {error}"})
+
+    stdout = completed.stdout.strip()
+    if completed.returncode == 0 and stdout.startswith("{"):
+        return stdout[:3000]
+    detail = (completed.stderr or stdout or "JavaScript sandbox produced no output").strip()
+    return sandbox_json({"ok": False, "error": detail[:1200]})
 
 
-def build_generation_config() -> dict[str, Any]:
+def generation_config() -> dict[str, Any]:
     config: dict[str, Any] = {
         "temperature": float(os.environ.get("GEMINI_TEMPERATURE", "0.75")),
-        "maxOutputTokens": int(os.environ.get("GEMINI_MAX_OUTPUT_TOKENS", "8192")),
-        "responseMimeType": "application/json"
+        "thinking_level": os.environ.get("GEMINI_THINKING_LEVEL", "high")
     }
-    thinking_budget = int(os.environ.get("GEMINI_THINKING_BUDGET", "4096"))
-    if thinking_budget > 0:
-        config["thinkingConfig"] = {
-            "thinkingBudget": thinking_budget,
-            "includeThoughts": False
-        }
+    max_output = os.environ.get("GEMINI_MAX_OUTPUT_TOKENS", "32768").strip()
+    if max_output and max_output != "0":
+        config["max_output_tokens"] = int(max_output)
     return config
 
 
-def tool_variants() -> list[list[dict[str, Any]]]:
-    function_tool = {"functionDeclarations": FUNCTION_DECLARATIONS}
+def interaction_tools() -> list[dict[str, Any]]:
     return [
-        [{"google_search": {}}, {"code_execution": {}}, function_tool],
-        [{"google_search": {}}, function_tool],
-        [{"code_execution": {}}, function_tool],
-        [function_tool]
+        {"type": "google_search"},
+        {"type": "code_execution"},
+        JAVASCRIPT_TOOL
     ]
 
 
-def call_gemini_once(
-    prompt: str,
-    api_key: str,
+def interaction_payload(
+    input_value: str | list[dict[str, Any]],
     model: str,
-    tools: list[dict[str, Any]],
-    include_thinking: bool
-) -> str:
-    contents: list[dict[str, Any]] = [{"role": "user", "parts": [{"text": prompt}]}]
-    endpoint = gemini_endpoint(model, api_key)
+    previous_interaction_id: str | None,
+    structured: bool
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "model": model,
+        "system_instruction": SYSTEM_PROMPT,
+        "input": input_value,
+        "generation_config": generation_config(),
+        "tools": interaction_tools(),
+        "store": True
+    }
+    if structured:
+        payload["response_format"] = {
+            "type": "text",
+            "mime_type": "application/json",
+            "schema": QUESTION_SCHEMA
+        }
+    if previous_interaction_id:
+        payload["previous_interaction_id"] = previous_interaction_id
+    return payload
+
+
+def output_text(response: dict[str, Any]) -> str:
+    direct = response.get("output_text") or response.get("outputText")
+    if isinstance(direct, str) and direct.strip():
+        return direct.strip()
+
+    texts: list[str] = []
+    for step in reversed(response.get("steps") or []):
+        if step.get("type") != "model_output":
+            if texts:
+                break
+            continue
+        parts = []
+        for content in step.get("content") or []:
+            if content.get("type") == "text" and content.get("text"):
+                parts.append(str(content["text"]))
+        if parts:
+            texts.insert(0, "".join(parts))
+    return "\n".join(texts).strip()
+
+
+def function_call_steps(response: dict[str, Any]) -> list[dict[str, Any]]:
+    return [step for step in response.get("steps") or [] if step.get("type") == "function_call"]
+
+
+def function_arguments(step: dict[str, Any]) -> dict[str, Any]:
+    arguments = step.get("arguments") or {}
+    if isinstance(arguments, str):
+        try:
+            parsed = json.loads(arguments)
+            return parsed if isinstance(parsed, dict) else {"source": arguments}
+        except json.JSONDecodeError:
+            return {"source": arguments}
+    return arguments if isinstance(arguments, dict) else {}
+
+
+def tool_result_step(step: dict[str, Any]) -> dict[str, Any]:
+    name = str(step.get("name") or "")
+    arguments = function_arguments(step)
+    if name == "javascript_eval":
+        result = run_javascript(str(arguments.get("source", "")))
+    else:
+        result = sandbox_json({"ok": False, "error": f"Unknown tool: {name}"})
+
+    result_step: dict[str, Any] = {
+        "type": "function_result",
+        "name": name,
+        "result": [{"type": "text", "text": result}]
+    }
+    if step.get("id"):
+        result_step["call_id"] = step["id"]
+    return result_step
+
+
+def call_interactions_once(prompt: str, api_key: str, model: str, structured: bool) -> str:
+    input_value: str | list[dict[str, Any]] = prompt
+    previous_interaction_id: str | None = None
 
     for _round in range(8):
-        generation_config = build_generation_config()
-        if not include_thinking:
-            generation_config.pop("thinkingConfig", None)
-        payload = {
-            "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
-            "contents": contents,
-            "generationConfig": generation_config,
-            "tools": tools
-        }
-        response = post_json(endpoint, payload)
-        candidates = response.get("candidates") or []
-        if not candidates:
-            raise GeminiError(f"Gemini returned no candidates: {json.dumps(response)[:500]}")
-        content = candidates[0].get("content") or {}
-        parts = content.get("parts") or []
-        function_calls = [part.get("functionCall") for part in parts if part.get("functionCall")]
-        if not function_calls:
-            text = "".join(str(part.get("text", "")) for part in parts if "text" in part).strip()
-            if not text:
-                raise GeminiError("Gemini returned no final text")
-            return text
+        payload = interaction_payload(input_value, model, previous_interaction_id, structured)
+        response = post_interaction(payload, api_key)
+        previous_interaction_id = str(response.get("id") or previous_interaction_id or "") or None
 
-        contents.append({"role": content.get("role", "model"), "parts": parts})
-        response_parts = []
-        for call in function_calls:
-            name = call.get("name")
-            args = call.get("args") or {}
-            if name == "javascript_eval":
-                result = run_javascript(str(args.get("source", "")))
-            else:
-                result = json.dumps({"ok": False, "error": f"Unknown tool: {name}"})
-            response_parts.append({
-                "functionResponse": {
-                    "name": name,
-                    "response": {"result": result}
-                }
-            })
-        contents.append({"role": "function", "parts": response_parts})
+        calls = function_call_steps(response)
+        if calls:
+            input_value = [tool_result_step(step) for step in calls]
+            continue
+
+        text = output_text(response)
+        if text:
+            return text
+        status = response.get("status", "unknown")
+        raise GeminiError(f"Gemini returned no final text (status: {status})")
 
     raise GeminiError("Gemini did not finish after the tool-use round limit")
 
 
 def call_gemini(prompt: str, api_key: str, model: str) -> str:
     errors = []
-    for tools in tool_variants():
-        for include_thinking in (True, False):
-            try:
-                return call_gemini_once(prompt, api_key, model, tools, include_thinking)
-            except GeminiError as error:
-                errors.append(str(error))
-                if error.status not in {400, 404} and not include_thinking:
-                    break
-    raise GeminiError("All Gemini request variants failed. " + " | ".join(errors[-4:]))
+    for structured in (True, False):
+        try:
+            return call_interactions_once(prompt, api_key, model, structured)
+        except GeminiError as error:
+            errors.append(str(error))
+            if error.status not in {400, 404}:
+                break
+    raise GeminiError("Gemini request failed. " + " | ".join(errors[-2:]))
 
 
 def extract_json_object(text: str) -> dict[str, Any]:
@@ -342,7 +432,8 @@ def validate_candidate(candidate: dict[str, Any]) -> list[str]:
     joined = json.dumps(candidate, ensure_ascii=False)
     if EMOJI_RE.search(joined):
         errors.append("contains emoji")
-    if len(candidate.get("statement", "")) < 30:
+    statement = candidate.get("statement")
+    if isinstance(statement, str) and len(statement) < 30:
         errors.append("statement is too short")
     return errors
 
@@ -353,7 +444,7 @@ def verification_passes(source: str) -> bool:
         result = json.loads(output)
     except json.JSONDecodeError:
         return False
-    return bool(result.get("ok")) and ("ok" in str(result.get("result", "")) or not result.get("error"))
+    return bool(result.get("ok")) and str(result.get("result", "")).strip() == "ok"
 
 
 def build_prompt(date: datetime, questions: list[dict[str, Any]]) -> str:
@@ -361,7 +452,7 @@ def build_prompt(date: datetime, questions: list[dict[str, Any]]) -> str:
     phase, target = phase_for_date(date)
     mode = "Sunday Curveball" if weekday == "Sunday" else "Standard"
     return USER_PROMPT_TEMPLATE.format(
-        date_long=date.strftime("%A, %-d %B %Y"),
+        date_long=f"{weekday}, {date.day} {date.strftime('%B %Y')}",
         date_iso=date.strftime("%Y-%m-%d"),
         weekday=weekday,
         mode=mode,
@@ -401,7 +492,7 @@ def generate_question(date: datetime, questions: list[dict[str, Any]], api_key: 
 
         verification_source = candidate["verification"]["javascript"]
         if not verification_passes(verification_source):
-            errors.append(f"attempt {attempt}: verification.javascript did not pass in the local JavaScript VM")
+            errors.append(f"attempt {attempt}: verification.javascript did not evaluate to the exact string 'ok' in the isolated JavaScript sandbox")
             continue
 
         candidate["verification"]["status"] = "passed"
@@ -416,6 +507,7 @@ def generate_question(date: datetime, questions: list[dict[str, Any]], api_key: 
         candidate["generation"] = {
             "model": model,
             "generatedAt": datetime.now(TIME_ZONE).isoformat(),
+            "api": "interactions",
             "tools": ["web_search", "private_reasoning", "javascript_eval", "code_execution"]
         }
         return candidate
